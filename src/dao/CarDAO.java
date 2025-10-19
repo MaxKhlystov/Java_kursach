@@ -1,0 +1,135 @@
+package dao;
+
+import model.Car;
+import model.DatabaseConnection;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Logger;
+
+public class CarDAO {
+    private static final Logger logger = Logger.getLogger(CarDAO.class.getName());
+
+    public boolean addCar(Car car) {
+        String sql = "INSERT INTO cars (brand, model, year, vin, license_plate, owner_id, registration_date) VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, car.getBrand());
+            pstmt.setString(2, car.getModel());
+            pstmt.setInt(3, car.getYear());
+            pstmt.setString(4, car.getVin());
+            pstmt.setString(5, car.getLicensePlate());
+            pstmt.setInt(6, car.getOwnerId());
+            pstmt.setString(7, car.getRegistrationDate().toString());
+
+            int result = pstmt.executeUpdate();
+            logger.info("Автомобиль добавлен: " + car.getBrand() + " " + car.getModel());
+            return result > 0;
+
+        } catch (SQLException e) {
+            logger.severe("Ошибка добавления автомобиля: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean deleteCar(int carId) {
+        String sql = "DELETE FROM cars WHERE id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, carId);
+
+            int result = pstmt.executeUpdate();
+            logger.info("Автомобиль удален ID: " + carId);
+            return result > 0;
+
+        } catch (SQLException e) {
+            logger.severe("Ошибка удаления автомобиля: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public List<Car> getCarsByOwner(int ownerId) {
+        List<Car> cars = new ArrayList<>();
+        String sql = "SELECT * FROM cars WHERE owner_id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, ownerId);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                Car car = new Car();
+                car.setId(rs.getInt("id"));
+                car.setBrand(rs.getString("brand"));
+                car.setModel(rs.getString("model"));
+                car.setYear(rs.getInt("year"));
+                car.setVin(rs.getString("vin"));
+                car.setLicensePlate(rs.getString("license_plate"));
+                car.setOwnerId(rs.getInt("owner_id"));
+                car.setRegistrationDate(java.time.LocalDate.parse(rs.getString("registration_date")));
+                cars.add(car);
+            }
+        } catch (SQLException e) {
+            logger.severe("Ошибка получения автомобилей: " + e.getMessage());
+        }
+        return cars;
+    }
+
+    public List<Car> getAllCars() {
+        List<Car> cars = new ArrayList<>();
+        String sql = "SELECT * FROM cars";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                Car car = new Car();
+                car.setId(rs.getInt("id"));
+                car.setBrand(rs.getString("brand"));
+                car.setModel(rs.getString("model"));
+                car.setYear(rs.getInt("year"));
+                car.setVin(rs.getString("vin"));
+                car.setLicensePlate(rs.getString("license_plate"));
+                car.setOwnerId(rs.getInt("owner_id"));
+                car.setRegistrationDate(java.time.LocalDate.parse(rs.getString("registration_date")));
+                cars.add(car);
+            }
+        } catch (SQLException e) {
+            logger.severe("Ошибка получения всех автомобилей: " + e.getMessage());
+        }
+        return cars;
+    }
+
+    public Car getCarById(int carId) {
+        String sql = "SELECT * FROM cars WHERE id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, carId);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                Car car = new Car();
+                car.setId(rs.getInt("id"));
+                car.setBrand(rs.getString("brand"));
+                car.setModel(rs.getString("model"));
+                car.setYear(rs.getInt("year"));
+                car.setVin(rs.getString("vin"));
+                car.setLicensePlate(rs.getString("license_plate"));
+                car.setOwnerId(rs.getInt("owner_id"));
+                car.setRegistrationDate(java.time.LocalDate.parse(rs.getString("registration_date")));
+                return car;
+            }
+        } catch (SQLException e) {
+            logger.severe("Ошибка получения автомобиля: " + e.getMessage());
+        }
+        return null;
+    }
+}
